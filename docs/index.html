@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>edu-ab · Программа прокачки в A/B тестировании</title>
+<meta name="description" content="Самоучебная программа по A/B тестированию: от статистики до продвинутых глав, с интерактивными Streamlit-демо." />
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --fg:#1a1d24; --muted:#5b6472;
+    --border:#e6e8ec; --accent:#4f46e5; --accent2:#0ea5e9;
+    --chip:#eef0f4; --code:#0f172a; --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1017; --card:#151a22; --fg:#e6e9ef; --muted:#95a0b0;
+      --border:#232a35; --accent:#818cf8; --accent2:#38bdf8;
+      --chip:#1c232e; --code:#0b1220; --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d1017; --card:#151a22; --fg:#e6e9ef; --muted:#95a0b0;
+    --border:#232a35; --accent:#818cf8; --accent2:#38bdf8; --chip:#1c232e; --code:#0b1220;
+  }
+  :root[data-theme="light"]{
+    --bg:#f7f8fa; --card:#ffffff; --fg:#1a1d24; --muted:#5b6472;
+    --border:#e6e8ec; --accent:#4f46e5; --accent2:#0ea5e9; --chip:#eef0f4; --code:#0f172a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+  header.hero{padding:72px 0 40px;text-align:center;
+    background:radial-gradient(1200px 400px at 50% -50%,rgba(99,102,241,.16),transparent)}
+  .badge{display:inline-block;font-size:13px;font-weight:600;color:var(--accent);
+    background:var(--chip);border:1px solid var(--border);padding:5px 12px;border-radius:999px;margin-bottom:20px}
+  h1{font-size:clamp(30px,5vw,46px);line-height:1.15;margin:0 0 14px;letter-spacing:-.02em}
+  .grad{background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:clamp(16px,2.4vw,19px);color:var(--muted);max-width:640px;margin:0 auto 28px}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:10px;
+    font-weight:600;font-size:15px;border:1px solid var(--border);background:var(--card);color:var(--fg);
+    box-shadow:var(--shadow);transition:transform .12s ease}
+  .btn:hover{transform:translateY(-1px);text-decoration:none}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border:none}
+  section{padding:36px 0}
+  h2{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+  .lead{color:var(--muted);margin:0 0 24px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:8px 0 4px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:26px;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat span{font-size:13px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;gap:8px}
+  .card .k{display:flex;align-items:center;gap:10px}
+  .num{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:700;
+    background:var(--chip);color:var(--accent);font-size:15px;flex:none}
+  .card h3{margin:0;font-size:18px}
+  .card p{margin:2px 0 0;color:var(--muted);font-size:14.5px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .tag{font-size:12px;color:var(--muted);background:var(--chip);border:1px solid var(--border);
+    padding:3px 9px;border-radius:7px}
+  .links{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .links a{font-size:13.5px;font-weight:600}
+  .demos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .demo{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:14px;
+    box-shadow:var(--shadow)}
+  .demo .e{font-size:22px}
+  .demo b{display:block;margin-top:6px;font-size:14px}
+  .demo span{color:var(--muted);font-size:12.5px}
+  pre{background:var(--code);color:#e6edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
+    font-size:13.5px;line-height:1.7;border:1px solid var(--border)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .note{background:var(--chip);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--muted)}
+  footer{padding:40px 0 60px;text-align:center;color:var(--muted);font-size:13.5px;border-top:1px solid var(--border);margin-top:20px}
+  .toggle{position:fixed;top:16px;right:16px;background:var(--card);border:1px solid var(--border);
+    border-radius:10px;width:40px;height:40px;cursor:pointer;font-size:18px;box-shadow:var(--shadow);color:var(--fg)}
+  @media (max-width:720px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<button class="toggle" id="themeToggle" title="Тема">🌓</button>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">edu-ab · самоучебная программа</span>
+    <h1>Прокачайся в <span class="grad">A/B тестировании</span><br/>от статистики до продвинутых глав</h1>
+    <p class="sub">Структурированный путь из 5 блоков с упором на практику и интерактивные
+      Streamlit-демо по каждой теме. Учись считать эксперименты руками, а не кликать «есть значимость».</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/geekhugged/edu-ab" target="_blank" rel="noopener">⭐ Репозиторий на GitHub</a>
+      <a class="btn" href="#demos">🎛️ Интерактивные демо</a>
+      <a class="btn" href="#roadmap">🗺️ Дорожная карта</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <div class="stats">
+      <div class="stat"><b>5</b><span>блоков программы</span></div>
+      <div class="stat"><b>~4</b><span>месяца по 6–8 ч/нед</span></div>
+      <div class="stat"><b>10</b><span>интерактивных демо</span></div>
+      <div class="stat"><b>5</b><span>мини-проектов</span></div>
+    </div>
+  </section>
+
+  <section id="roadmap">
+    <h2>Дорожная карта</h2>
+    <p class="lead">Каждый блок опирается на предыдущий. В каждом модуле: Цели → Темы → Что уметь → Практика → Ресурсы.</p>
+    <div class="grid">
+
+      <div class="card">
+        <div class="k"><div class="num">0</div><h3>Инструменты и подготовка</h3></div>
+        <p>Python-стек для расчётов и симуляций, освежение pandas/numpy, базовый SQL.</p>
+        <div class="tags"><span class="tag">numpy</span><span class="tag">pandas</span><span class="tag">scipy</span><span class="tag">SQL</span></div>
+        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/00-toolkit.md" target="_blank" rel="noopener">Открыть блок →</a></div>
+      </div>
+
+      <div class="card">
+        <div class="k"><div class="num">1</div><h3>Статистика — фундамент</h3></div>
+        <p>Распределения, ЦПТ/ЗБЧ, доверительные интервалы, проверка гипотез: p-value, ошибки I/II рода, мощность.</p>
+        <div class="tags"><span class="tag">ЦПТ</span><span class="tag">CI</span><span class="tag">p-value</span><span class="tag">мощность</span></div>
+        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/01-statistics.md" target="_blank" rel="noopener">Открыть блок →</a></div>
+      </div>
+
+      <div class="card">
+        <div class="k"><div class="num">2</div><h3>Основы A/B тестирования</h3></div>
+        <p>Причинность и RCT, метрики/OEC/guardrails, рандомизация, размер выборки и MDE, статкритерии, readout.</p>
+        <div class="tags"><span class="tag">MDE</span><span class="tag">OEC</span><span class="tag">t/z-тест</span><span class="tag">рандомизация</span></div>
+        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/02-ab-basics.md" target="_blank" rel="noopener">Открыть блок →</a></div>
+      </div>
+
+      <div class="card">
+        <div class="k"><div class="num">3</div><h3>Подводные камни</h3></div>
+        <p>Peeking, множественные сравнения, SRM и A/A, novelty-эффекты, парадокс Симпсона.</p>
+        <div class="tags"><span class="tag">peeking</span><span class="tag">SRM</span><span class="tag">FDR</span><span class="tag">Симпсон</span></div>
+        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/03-pitfalls.md" target="_blank" rel="noopener">Открыть блок →</a></div>
+      </div>
+
+      <div class="card">
+        <div class="k"><div class="num">4</div><h3>Продвинутые методы</h3></div>
+        <p>CUPED, sequential testing, байесовский A/B, бандиты, switchback/интерференция, uplift, квазиэксперименты.</p>
+        <div class="tags"><span class="tag">CUPED</span><span class="tag">sequential</span><span class="tag">bayes</span><span class="tag">bandits</span><span class="tag">DiD</span></div>
+        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/04-advanced.md" target="_blank" rel="noopener">Открыть блок →</a></div>
+      </div>
+
+      <div class="card">
+        <div class="k"><div class="num">5</div><h3>Капстоун-проект</h3></div>
+        <p>Полноценный корректный эксперимент от гипотезы до решения — для портфолио.</p>
+        <div class="tags"><span class="tag">портфолио</span><span class="tag">readout</span><span class="tag">end-to-end</span></div>
+        <div class="links">
+          <a href="https://github.com/geekhugged/edu-ab/blob/main/program/05-capstone.md" target="_blank" rel="noopener">Открыть блок →</a>
+          <a href="https://github.com/geekhugged/edu-ab/blob/main/program/progress.md" target="_blank" rel="noopener">Трекер прогресса →</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="demos">
+    <h2>Интерактивные демо (Streamlit)</h2>
+    <p class="lead">Каждая тема программы сопровождается интерактивным демо: двигаешь слайдеры — видишь, как меняются
+      распределения, доверительные интервалы, ошибки и решения.</p>
+    <div class="demos">
+      <div class="demo"><div class="e">📊</div><b>ЦПТ и ЗБЧ</b><span>как рождается нормальность</span></div>
+      <div class="demo"><div class="e">📏</div><b>Доверительные интервалы</b><span>формула vs bootstrap</span></div>
+      <div class="demo"><div class="e">🎯</div><b>Проверка гипотез</b><span>p-value, α, мощность, A/A</span></div>
+      <div class="demo"><div class="e">🧮</div><b>Калькулятор выборки</b><span>MDE ↔ n ↔ длительность</span></div>
+      <div class="demo"><div class="e">⚖️</div><b>Статкритерии</b><span>z-тест долей, t-тест</span></div>
+      <div class="demo"><div class="e">👀</div><b>Проблема peeking</b><span>раздувание ошибки I рода</span></div>
+      <div class="demo"><div class="e">🔀</div><b>SRM-чек</b><span>сломан ли сплиттер</span></div>
+      <div class="demo"><div class="e">🎛️</div><b>Множественные сравнения</b><span>Bonferroni / BH</span></div>
+      <div class="demo"><div class="e">⚡</div><b>CUPED</b><span>снижение дисперсии</span></div>
+      <div class="demo"><div class="e">🃏</div><b>Байес и бандиты</b><span>P(B&gt;A), Thompson</span></div>
+    </div>
+
+    <h3 style="margin-top:26px">Запустить у себя</h3>
+    <pre><code>git clone https://github.com/geekhugged/edu-ab.git
+cd edu-ab/app
+pip install -r requirements.txt
+streamlit run streamlit_app.py</code></pre>
+    <p class="note">💡 Демо можно бесплатно задеплоить в один клик на
+      <a href="https://streamlit.io/cloud" target="_blank" rel="noopener">Streamlit Community Cloud</a>:
+      укажите репозиторий <code>geekhugged/edu-ab</code> и главный файл <code>app/streamlit_app.py</code>.</p>
+  </section>
+
+  <section>
+    <h2>С чего начать</h2>
+    <p class="lead">Минимальная траектория, если времени мало.</p>
+    <div class="grid">
+      <div class="card"><div class="k"><div class="num">1</div><h3>Прочитать блок</h3></div>
+        <p>Откройте модуль на GitHub, пройдите теорию и «Что уметь».</p></div>
+      <div class="card"><div class="k"><div class="num">2</div><h3>Покрутить демо</h3></div>
+        <p>Запустите соответствующее Streamlit-демо и поиграйте со слайдерами.</p></div>
+      <div class="card"><div class="k"><div class="num">3</div><h3>Сделать практику</h3></div>
+        <p>Воспроизведите расчёт руками/в коде — только так навык закрепляется.</p></div>
+      <div class="card"><div class="k"><div class="num">4</div><h3>Отметить прогресс</h3></div>
+        <p>Поставьте галочку в трекере и переходите к следующему модулю.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    edu-ab — открытая программа по A/B тестированию ·
+    <a href="https://github.com/geekhugged/edu-ab" target="_blank" rel="noopener">GitHub</a><br/>
+    Сделано для самостоятельной прокачки. Учись, экспериментируй, не подглядывай в тесты 😉
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var btn=document.getElementById('themeToggle');
+    var root=document.documentElement;
+    btn.addEventListener('click',function(){
+      var cur=root.getAttribute('data-theme');
+      var next = cur==='dark' ? 'light' : (cur==='light' ? 'dark' :
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'light':'dark'));
+      root.setAttribute('data-theme',next);
+    });
+  })();
+</script>
+</body>
+</html>
