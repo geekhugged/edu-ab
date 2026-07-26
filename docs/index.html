@@ -2,232 +2,670 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>edu-ab · Программа прокачки в A/B тестировании</title>
-<meta name="description" content="Самоучебная программа по A/B тестированию: от статистики до продвинутых глав, с интерактивными Streamlit-демо." />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1a73e8" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0b0f14" media="(prefers-color-scheme: dark)" />
+<title>edu-ab · Теория A/B тестирования</title>
+<meta name="description" content="Подробная теория A/B тестирования: от статистики до продвинутых глав. Материал в стиле Google, аккордеоны, удобно с телефона." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --bg:#f7f8fa; --card:#ffffff; --fg:#1a1d24; --muted:#5b6472;
-    --border:#e6e8ec; --accent:#4f46e5; --accent2:#0ea5e9;
-    --chip:#eef0f4; --code:#0f172a; --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04);
+    --blue:#1a73e8; --blue-d:#174ea6; --green:#188038; --red:#d93025; --yellow:#f9ab00;
+    --bg:#f8f9fa; --surface:#ffffff; --text:#202124; --text2:#5f6368; --border:#dadce0;
+    --chip:#f1f3f4; --chip-active:#e8f0fe; --code-bg:#f1f3f4; --shadow:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15);
+    --callout-note:#e8f0fe; --callout-warn:#fef7e0; --callout-ok:#e6f4ea;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#0d1017; --card:#151a22; --fg:#e6e9ef; --muted:#95a0b0;
-      --border:#232a35; --accent:#818cf8; --accent2:#38bdf8;
-      --chip:#1c232e; --code:#0b1220; --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+      --blue:#8ab4f8; --blue-d:#aecbfa; --green:#81c995; --red:#f28b82; --yellow:#fdd663;
+      --bg:#0b0f14; --surface:#1e2127; --text:#e8eaed; --text2:#9aa0a6; --border:#3c4043;
+      --chip:#282a2f; --chip-active:#283142; --code-bg:#282a2f; --shadow:0 1px 3px rgba(0,0,0,.6);
+      --callout-note:#1c2a3a; --callout-warn:#33291a; --callout-ok:#1b2b1f;
     }
   }
-  :root[data-theme="dark"]{
-    --bg:#0d1017; --card:#151a22; --fg:#e6e9ef; --muted:#95a0b0;
-    --border:#232a35; --accent:#818cf8; --accent2:#38bdf8; --chip:#1c232e; --code:#0b1220;
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:"Roboto",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom);
   }
-  :root[data-theme="light"]{
-    --bg:#f7f8fa; --card:#ffffff; --fg:#1a1d24; --muted:#5b6472;
-    --border:#e6e8ec; --accent:#4f46e5; --accent2:#0ea5e9; --chip:#eef0f4; --code:#0f172a;
+  a{color:var(--blue);text-decoration:none}
+
+  /* App bar (Material) */
+  .appbar{
+    position:sticky;top:0;z-index:50;background:var(--surface);
+    box-shadow:var(--shadow);
+    padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;
+    display:flex;align-items:center;gap:12px;
   }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    line-height:1.6;-webkit-font-smoothing:antialiased}
-  a{color:var(--accent);text-decoration:none}
-  a:hover{text-decoration:underline}
-  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
-  header.hero{padding:72px 0 40px;text-align:center;
-    background:radial-gradient(1200px 400px at 50% -50%,rgba(99,102,241,.16),transparent)}
-  .badge{display:inline-block;font-size:13px;font-weight:600;color:var(--accent);
-    background:var(--chip);border:1px solid var(--border);padding:5px 12px;border-radius:999px;margin-bottom:20px}
-  h1{font-size:clamp(30px,5vw,46px);line-height:1.15;margin:0 0 14px;letter-spacing:-.02em}
-  .grad{background:linear-gradient(90deg,var(--accent),var(--accent2));
-    -webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{font-size:clamp(16px,2.4vw,19px);color:var(--muted);max-width:640px;margin:0 auto 28px}
-  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px}
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:10px;
-    font-weight:600;font-size:15px;border:1px solid var(--border);background:var(--card);color:var(--fg);
-    box-shadow:var(--shadow);transition:transform .12s ease}
-  .btn:hover{transform:translateY(-1px);text-decoration:none}
-  .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border:none}
-  section{padding:36px 0}
-  h2{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
-  .lead{color:var(--muted);margin:0 0 24px}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:8px 0 4px}
-  .stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;box-shadow:var(--shadow)}
-  .stat b{display:block;font-size:26px;background:linear-gradient(90deg,var(--accent),var(--accent2));
-    -webkit-background-clip:text;background-clip:text;color:transparent}
-  .stat span{font-size:13px;color:var(--muted)}
-  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:var(--shadow);
-    display:flex;flex-direction:column;gap:8px}
-  .card .k{display:flex;align-items:center;gap:10px}
-  .num{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:700;
-    background:var(--chip);color:var(--accent);font-size:15px;flex:none}
-  .card h3{margin:0;font-size:18px}
-  .card p{margin:2px 0 0;color:var(--muted);font-size:14.5px}
-  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .tag{font-size:12px;color:var(--muted);background:var(--chip);border:1px solid var(--border);
-    padding:3px 9px;border-radius:7px}
-  .links{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-  .links a{font-size:13.5px;font-weight:600}
-  .demos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-  .demo{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:14px;
-    box-shadow:var(--shadow)}
-  .demo .e{font-size:22px}
-  .demo b{display:block;margin-top:6px;font-size:14px}
-  .demo span{color:var(--muted);font-size:12.5px}
-  pre{background:var(--code);color:#e6edf3;border-radius:12px;padding:16px 18px;overflow-x:auto;
-    font-size:13.5px;line-height:1.7;border:1px solid var(--border)}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-  .note{background:var(--chip);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--muted)}
-  footer{padding:40px 0 60px;text-align:center;color:var(--muted);font-size:13.5px;border-top:1px solid var(--border);margin-top:20px}
-  .toggle{position:fixed;top:16px;right:16px;background:var(--card);border:1px solid var(--border);
-    border-radius:10px;width:40px;height:40px;cursor:pointer;font-size:18px;box-shadow:var(--shadow);color:var(--fg)}
-  @media (max-width:720px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:18px;letter-spacing:-.2px}
+  .logo .dot{width:26px;height:26px;border-radius:50%;
+    background:conic-gradient(from 90deg,#4285f4,#ea4335,#fbbc05,#34a853,#4285f4);flex:none}
+  .appbar .grow{flex:1}
+  .iconbtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+    color:var(--text2);border:none;background:transparent;cursor:pointer}
+  .iconbtn:active{background:var(--chip)}
+  .iconbtn svg{width:22px;height:22px;fill:currentColor}
+
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+
+  /* Hero */
+  .hero{padding:26px 0 8px}
+  .hero h1{font-size:26px;line-height:1.2;margin:0 0 6px;font-weight:700;letter-spacing:-.4px}
+  .hero p{color:var(--text2);margin:0 0 16px;font-size:15px}
+
+  /* Search (Google pill) */
+  .search{position:relative;margin:4px 0 12px}
+  .search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:20px;height:20px;fill:var(--text2)}
+  .search input{
+    width:100%;height:50px;border-radius:25px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);font-size:16px;
+    padding:0 18px 0 46px;outline:none;box-shadow:var(--shadow);
+  }
+  .search input:focus{border-color:var(--blue)}
+
+  /* Chips nav */
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:6px 0 14px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;padding:8px 15px;border-radius:18px;background:var(--chip);
+    color:var(--text);font-size:14px;font-weight:500;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+  .chip.active{background:var(--chip-active);color:var(--blue);border-color:transparent}
+
+  /* Section */
+  .block{margin:22px 0 8px}
+  .block-h{display:flex;align-items:baseline;gap:10px;margin:0 0 4px}
+  .block-h .n{font-size:13px;font-weight:700;color:#fff;background:var(--blue);
+    border-radius:6px;padding:2px 8px;align-self:center}
+  .block-h h2{font-size:20px;margin:0;font-weight:700;letter-spacing:-.2px}
+  .block-sub{color:var(--text2);font-size:14px;margin:2px 0 12px}
+
+  /* Accordion / expansion panel */
+  details.panel{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    margin:10px 0;overflow:hidden;box-shadow:var(--shadow);
+  }
+  details.panel[open]{border-color:var(--blue)}
+  summary{
+    list-style:none;cursor:pointer;padding:16px;min-height:56px;
+    display:flex;align-items:center;gap:12px;font-weight:500;font-size:16px;user-select:none;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary .tag{font-size:12px;font-weight:700;color:var(--blue);background:var(--chip-active);
+    border-radius:6px;padding:3px 7px;flex:none}
+  summary .ttl{flex:1;line-height:1.35}
+  summary .chev{width:24px;height:24px;fill:var(--text2);transition:transform .25s ease;flex:none}
+  details[open] summary .chev{transform:rotate(180deg)}
+  .panel-body{padding:0 16px 18px;font-size:15.5px;color:var(--text);animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .panel-body h4{font-size:15px;font-weight:700;margin:16px 0 6px;color:var(--text)}
+  .panel-body p{margin:8px 0}
+  .panel-body ul{margin:8px 0;padding-left:22px}
+  .panel-body li{margin:5px 0}
+  .panel-body b, .panel-body strong{font-weight:700}
+
+  /* Formula */
+  .formula{background:var(--code-bg);border-radius:8px;padding:12px 14px;margin:12px 0;
+    font-family:"Roboto Mono",ui-monospace,monospace;font-size:14.5px;overflow-x:auto;
+    line-height:1.9;border-left:3px solid var(--blue)}
+  code{font-family:"Roboto Mono",monospace;background:var(--code-bg);padding:1px 6px;border-radius:5px;font-size:.9em}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 3px}
+  .frac >span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px}
+  .frac >span:last-child{padding:0 4px}
+
+  /* Callouts */
+  .call{border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14.5px;display:flex;gap:10px}
+  .call .ci{flex:none;font-size:18px;line-height:1.5}
+  .call.note{background:var(--callout-note)}
+  .call.warn{background:var(--callout-warn)}
+  .call.ok{background:var(--callout-ok)}
+  .call b{font-weight:700}
+
+  .demo-link{display:inline-flex;align-items:center;gap:7px;margin-top:12px;font-weight:500;
+    background:var(--chip-active);color:var(--blue);padding:9px 14px;border-radius:20px;font-size:14px}
+
+  .empty{display:none;text-align:center;color:var(--text2);padding:40px 0}
+
+  /* FAB back to top */
+  .fab{position:fixed;right:calc(16px + env(safe-area-inset-right));
+    bottom:calc(16px + env(safe-area-inset-bottom));
+    width:52px;height:52px;border-radius:16px;background:var(--blue);color:#fff;border:none;
+    display:none;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.3);cursor:pointer;z-index:40}
+  .fab.show{display:grid}
+  .fab svg{width:24px;height:24px;fill:#fff}
+
+  footer{color:var(--text2);font-size:13px;text-align:center;padding:30px 16px 40px;border-top:1px solid var(--border);margin-top:26px}
+
+  @media (min-width:600px){ .hero h1{font-size:32px} body{font-size:16.5px} }
 </style>
 </head>
 <body>
-<button class="toggle" id="themeToggle" title="Тема">🌓</button>
 
-<header class="hero">
-  <div class="wrap">
-    <span class="badge">edu-ab · самоучебная программа</span>
-    <h1>Прокачайся в <span class="grad">A/B тестировании</span><br/>от статистики до продвинутых глав</h1>
-    <p class="sub">Структурированный путь из 5 блоков с упором на практику и интерактивные
-      Streamlit-демо по каждой теме. Учись считать эксперименты руками, а не кликать «есть значимость».</p>
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/geekhugged/edu-ab" target="_blank" rel="noopener">⭐ Репозиторий на GitHub</a>
-      <a class="btn" href="#demos">🎛️ Интерактивные демо</a>
-      <a class="btn" href="#roadmap">🗺️ Дорожная карта</a>
-    </div>
-  </div>
-</header>
-
-<div class="wrap">
-
-  <section>
-    <div class="stats">
-      <div class="stat"><b>5</b><span>блоков программы</span></div>
-      <div class="stat"><b>~4</b><span>месяца по 6–8 ч/нед</span></div>
-      <div class="stat"><b>10</b><span>интерактивных демо</span></div>
-      <div class="stat"><b>5</b><span>мини-проектов</span></div>
-    </div>
-  </section>
-
-  <section id="roadmap">
-    <h2>Дорожная карта</h2>
-    <p class="lead">Каждый блок опирается на предыдущий. В каждом модуле: Цели → Темы → Что уметь → Практика → Ресурсы.</p>
-    <div class="grid">
-
-      <div class="card">
-        <div class="k"><div class="num">0</div><h3>Инструменты и подготовка</h3></div>
-        <p>Python-стек для расчётов и симуляций, освежение pandas/numpy, базовый SQL.</p>
-        <div class="tags"><span class="tag">numpy</span><span class="tag">pandas</span><span class="tag">scipy</span><span class="tag">SQL</span></div>
-        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/00-toolkit.md" target="_blank" rel="noopener">Открыть блок →</a></div>
-      </div>
-
-      <div class="card">
-        <div class="k"><div class="num">1</div><h3>Статистика — фундамент</h3></div>
-        <p>Распределения, ЦПТ/ЗБЧ, доверительные интервалы, проверка гипотез: p-value, ошибки I/II рода, мощность.</p>
-        <div class="tags"><span class="tag">ЦПТ</span><span class="tag">CI</span><span class="tag">p-value</span><span class="tag">мощность</span></div>
-        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/01-statistics.md" target="_blank" rel="noopener">Открыть блок →</a></div>
-      </div>
-
-      <div class="card">
-        <div class="k"><div class="num">2</div><h3>Основы A/B тестирования</h3></div>
-        <p>Причинность и RCT, метрики/OEC/guardrails, рандомизация, размер выборки и MDE, статкритерии, readout.</p>
-        <div class="tags"><span class="tag">MDE</span><span class="tag">OEC</span><span class="tag">t/z-тест</span><span class="tag">рандомизация</span></div>
-        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/02-ab-basics.md" target="_blank" rel="noopener">Открыть блок →</a></div>
-      </div>
-
-      <div class="card">
-        <div class="k"><div class="num">3</div><h3>Подводные камни</h3></div>
-        <p>Peeking, множественные сравнения, SRM и A/A, novelty-эффекты, парадокс Симпсона.</p>
-        <div class="tags"><span class="tag">peeking</span><span class="tag">SRM</span><span class="tag">FDR</span><span class="tag">Симпсон</span></div>
-        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/03-pitfalls.md" target="_blank" rel="noopener">Открыть блок →</a></div>
-      </div>
-
-      <div class="card">
-        <div class="k"><div class="num">4</div><h3>Продвинутые методы</h3></div>
-        <p>CUPED, sequential testing, байесовский A/B, бандиты, switchback/интерференция, uplift, квазиэксперименты.</p>
-        <div class="tags"><span class="tag">CUPED</span><span class="tag">sequential</span><span class="tag">bayes</span><span class="tag">bandits</span><span class="tag">DiD</span></div>
-        <div class="links"><a href="https://github.com/geekhugged/edu-ab/blob/main/program/04-advanced.md" target="_blank" rel="noopener">Открыть блок →</a></div>
-      </div>
-
-      <div class="card">
-        <div class="k"><div class="num">5</div><h3>Капстоун-проект</h3></div>
-        <p>Полноценный корректный эксперимент от гипотезы до решения — для портфолио.</p>
-        <div class="tags"><span class="tag">портфолио</span><span class="tag">readout</span><span class="tag">end-to-end</span></div>
-        <div class="links">
-          <a href="https://github.com/geekhugged/edu-ab/blob/main/program/05-capstone.md" target="_blank" rel="noopener">Открыть блок →</a>
-          <a href="https://github.com/geekhugged/edu-ab/blob/main/program/progress.md" target="_blank" rel="noopener">Трекер прогресса →</a>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <section id="demos">
-    <h2>Интерактивные демо (Streamlit)</h2>
-    <p class="lead">Каждая тема программы сопровождается интерактивным демо: двигаешь слайдеры — видишь, как меняются
-      распределения, доверительные интервалы, ошибки и решения.</p>
-    <div class="demos">
-      <div class="demo"><div class="e">📊</div><b>ЦПТ и ЗБЧ</b><span>как рождается нормальность</span></div>
-      <div class="demo"><div class="e">📏</div><b>Доверительные интервалы</b><span>формула vs bootstrap</span></div>
-      <div class="demo"><div class="e">🎯</div><b>Проверка гипотез</b><span>p-value, α, мощность, A/A</span></div>
-      <div class="demo"><div class="e">🧮</div><b>Калькулятор выборки</b><span>MDE ↔ n ↔ длительность</span></div>
-      <div class="demo"><div class="e">⚖️</div><b>Статкритерии</b><span>z-тест долей, t-тест</span></div>
-      <div class="demo"><div class="e">👀</div><b>Проблема peeking</b><span>раздувание ошибки I рода</span></div>
-      <div class="demo"><div class="e">🔀</div><b>SRM-чек</b><span>сломан ли сплиттер</span></div>
-      <div class="demo"><div class="e">🎛️</div><b>Множественные сравнения</b><span>Bonferroni / BH</span></div>
-      <div class="demo"><div class="e">⚡</div><b>CUPED</b><span>снижение дисперсии</span></div>
-      <div class="demo"><div class="e">🃏</div><b>Байес и бандиты</b><span>P(B&gt;A), Thompson</span></div>
-    </div>
-
-    <h3 style="margin-top:26px">Запустить у себя</h3>
-    <pre><code>git clone https://github.com/geekhugged/edu-ab.git
-cd edu-ab/app
-pip install -r requirements.txt
-streamlit run streamlit_app.py</code></pre>
-    <p class="note">💡 Демо можно бесплатно задеплоить в один клик на
-      <a href="https://streamlit.io/cloud" target="_blank" rel="noopener">Streamlit Community Cloud</a>:
-      укажите репозиторий <code>geekhugged/edu-ab</code> и главный файл <code>app/streamlit_app.py</code>.</p>
-  </section>
-
-  <section>
-    <h2>С чего начать</h2>
-    <p class="lead">Минимальная траектория, если времени мало.</p>
-    <div class="grid">
-      <div class="card"><div class="k"><div class="num">1</div><h3>Прочитать блок</h3></div>
-        <p>Откройте модуль на GitHub, пройдите теорию и «Что уметь».</p></div>
-      <div class="card"><div class="k"><div class="num">2</div><h3>Покрутить демо</h3></div>
-        <p>Запустите соответствующее Streamlit-демо и поиграйте со слайдерами.</p></div>
-      <div class="card"><div class="k"><div class="num">3</div><h3>Сделать практику</h3></div>
-        <p>Воспроизведите расчёт руками/в коде — только так навык закрепляется.</p></div>
-      <div class="card"><div class="k"><div class="num">4</div><h3>Отметить прогресс</h3></div>
-        <p>Поставьте галочку в трекере и переходите к следующему модулю.</p></div>
-    </div>
-  </section>
-
+<div class="appbar">
+  <div class="logo"><span class="dot"></span>edu-ab</div>
+  <div class="grow"></div>
+  <button class="iconbtn" id="toggleAll" title="Развернуть/свернуть всё" aria-label="Развернуть всё">
+    <svg viewBox="0 0 24 24"><path d="M12 5.83 15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z"/></svg>
+  </button>
+  <a class="iconbtn" href="https://github.com/geekhugged/edu-ab" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+    <svg viewBox="0 0 24 24"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11 11 0 0 1 6 0C17 4.5 18 4.8 18 4.8c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+  </a>
 </div>
 
-<footer>
-  <div class="wrap">
-    edu-ab — открытая программа по A/B тестированию ·
-    <a href="https://github.com/geekhugged/edu-ab" target="_blank" rel="noopener">GitHub</a><br/>
-    Сделано для самостоятельной прокачки. Учись, экспериментируй, не подглядывай в тесты 😉
+<div class="wrap">
+  <div class="hero">
+    <h1>Теория A/B тестирования</h1>
+    <p>Подробный конспект от статистики до продвинутых глав. Нажмите на тему, чтобы раскрыть.</p>
+    <div class="search">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z"/></svg>
+      <input id="q" type="search" placeholder="Поиск по темам: p-value, CUPED, SRM…" autocomplete="off" />
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip active" data-f="all">Все</button>
+      <button class="chip" data-f="b1">1 · Статистика</button>
+      <button class="chip" data-f="b2">2 · Основы A/B</button>
+      <button class="chip" data-f="b3">3 · Подводные камни</button>
+      <button class="chip" data-f="b4">4 · Продвинутое</button>
+    </div>
   </div>
+
+  <!-- ================= БЛОК 1 ================= -->
+  <section class="block" data-block="b1">
+    <div class="block-h"><span class="n">Блок 1</span><h2>Статистика — фундамент</h2></div>
+    <p class="block-sub">Без этого A/B тест превращается в клик по кнопке «есть значимость».</p>
+
+    <details class="panel" data-kw="описательная статистика типы данных среднее медиана дисперсия перцентили выбросы">
+      <summary><span class="tag">1.1</span><span class="ttl">Описательная статистика и типы данных</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Прежде чем что-то тестировать, данные нужно <b>описать</b>. От типа данных зависит выбор метрики и критерия.</p>
+        <h4>Типы данных</h4>
+        <ul>
+          <li><b>Категориальные:</b> номинальные (страна, канал) и порядковые (оценка 1–5).</li>
+          <li><b>Количественные:</b> дискретные (число заказов) и непрерывные (выручка, время).</li>
+        </ul>
+        <h4>Меры центра</h4>
+        <ul>
+          <li><b>Среднее</b> — чувствительно к выбросам. Хорошо для симметричных данных.</li>
+          <li><b>Медиана</b> — устойчива к «китам». Для скошенных метрик (выручка, время на сайте) — честнее.</li>
+          <li><b>Мода</b> — самое частое значение.</li>
+        </ul>
+        <h4>Меры разброса</h4>
+        <p>Дисперсия <code>σ²</code> и стандартное отклонение <code>σ</code> измеряют, насколько данные «размазаны». IQR (межквартильный размах) устойчив к выбросам.</p>
+        <div class="formula">σ² = <span class="frac"><span>1</span><span>n−1</span></span> · Σ (xᵢ − x̄)²&nbsp;&nbsp;&nbsp;σ = √σ²</div>
+        <div class="call warn"><span class="ci">⚠️</span><div><b>Частая ошибка:</b> для сильно скошенной выручки отчитываться средним. Один крупный клиент двигает среднее, и «рост» может быть шумом одного кита. Смотрите и медиану, и распределение целиком.</div></div>
+        <a class="demo-link" href="#demo">▶ Демо: «ЦПТ и ЗБЧ» показывает форму распределений</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="вероятность распределения бернулли биномиальное нормальное пуассон логнормальное pdf cdf">
+      <summary><span class="tag">1.2</span><span class="ttl">Вероятность и распределения</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Каждая метрика эксперимента живёт по своему <b>распределению</b>. Знание распределения = знание правильного критерия.</p>
+        <h4>Ключевые распределения</h4>
+        <ul>
+          <li><b>Бернулли / Биномиальное</b> — события «да/нет»: клик, конверсия. Конверсия — это среднее бернуллиевых величин.</li>
+          <li><b>Нормальное (Гаусс)</b> — суммы и средние. Основа z- и t-тестов.</li>
+          <li><b>Пуассона</b> — счётные события: число заказов за период.</li>
+          <li><b>Логнормальное / экспоненциальное</b> — выручка, время. Тяжёлый правый хвост.</li>
+        </ul>
+        <p>Функция распределения <b>CDF</b> <code>F(x)=P(X≤x)</code>, плотность <b>PDF</b> — её производная. Матожидание <code>E[X]</code> — «центр тяжести», дисперсия — разброс.</p>
+        <p>Для Бернулли с вероятностью <code>p</code>:</p>
+        <div class="formula">E[X] = p&nbsp;&nbsp;&nbsp;&nbsp;Var(X) = p(1−p)</div>
+        <div class="call note"><span class="ci">💡</span><div>Дисперсия конверсии максимальна при <code>p=0.5</code> и мала у краёв. Поэтому тесты для очень редких или очень частых событий требуют другого объёма выборки.</div></div>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="цпт центральная предельная теорема закон больших чисел стандартная ошибка se sqrt n">
+      <summary><span class="tag">1.3</span><span class="ttl">ЦПТ, ЗБЧ и стандартная ошибка</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Два закона, на которых стоит вся статистика экспериментов.</p>
+        <h4>Закон больших чисел (ЗБЧ)</h4>
+        <p>С ростом выборки выборочное среднее сходится к истинному. Больше данных → ближе к правде.</p>
+        <h4>Центральная предельная теорема (ЦПТ)</h4>
+        <p>Распределение <b>выборочного среднего</b> стремится к нормальному — <i>независимо</i> от исходного распределения. Именно поэтому t-тест работает даже для скошенной выручки при большом n.</p>
+        <h4>Стандартная ошибка — главная формула курса</h4>
+        <div class="formula">SE = <span class="frac"><span>σ</span><span>√n</span></span></div>
+        <p>Точность оценки растёт как <code>√n</code>: чтобы удвоить точность, нужно <b>вчетверо</b> больше данных.</p>
+        <div class="call ok"><span class="ci">✅</span><div><b>Следствие для A/B:</b> хотите ловить маленький эффект — нужна большая выборка. А если снизить дисперсию σ² (например, CUPED), SE сузится без роста n.</div></div>
+        <a class="demo-link" href="#demo">▶ Демо: «ЦПТ и ЗБЧ»</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="доверительный интервал ci bootstrap оценка неопределённость 95%">
+      <summary><span class="tag">1.4</span><span class="ttl">Доверительные интервалы и bootstrap</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Точечная оценка («конверсия 5.2%») бесполезна без меры неопределённости. Доверительный интервал (CI) её и выражает.</p>
+        <div class="formula">CI₉₅ = оценка ± 1.96 · SE</div>
+        <div class="call warn"><span class="ci">⚠️</span><div><b>Правильная интерпретация 95% CI:</b> если повторить эксперимент много раз, 95% таких интервалов накроют истинное значение. Это <b>не</b> «вероятность 95%, что параметр здесь».</div></div>
+        <h4>Bootstrap</h4>
+        <p>Универсальный способ получить CI без формул: многократно ресэмплируем данные с возвращением, каждый раз считаем статистику, берём перцентили 2.5% и 97.5%. Работает для медианы и любых сложных метрик, где аналитической формулы нет.</p>
+        <p>Связь с тестом гипотез: если <code>0</code> вне 95% CI разницы — эффект значим на уровне 5%.</p>
+        <a class="demo-link" href="#demo">▶ Демо: «Доверительные интервалы»</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="проверка гипотез p-value ошибка первого рода второго рода мощность альфа бета h0 h1">
+      <summary><span class="tag">1.5</span><span class="ttl">Проверка гипотез: p-value, ошибки, мощность</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Сердце любого A/B теста. Мы формулируем <b>нулевую гипотезу H₀</b> («эффекта нет») и проверяем, насколько данные ей противоречат.</p>
+        <h4>Две ошибки</h4>
+        <ul>
+          <li><b>Ошибка I рода (α, false positive):</b> объявили эффект, которого нет.</li>
+          <li><b>Ошибка II рода (β, false negative):</b> проглядели реальный эффект.</li>
+          <li><b>Мощность = 1 − β:</b> вероятность заметить эффект, если он есть. Стандарт — 80%.</li>
+        </ul>
+        <h4>Что такое p-value</h4>
+        <p>Вероятность увидеть такие или более экстремальные данные, <i>если H₀ верна</i>.</p>
+        <div class="call warn"><span class="ci">⚠️</span><div>p-value — это <b>НЕ</b> вероятность, что H₀ верна, и не вероятность, что эффект случаен. Маленькое p ⇒ данные плохо согласуются с «эффекта нет».</div></div>
+        <h4>Компромисс</h4>
+        <p>При фиксированном n снижение α поднимает β (падает мощность). Единственный способ иметь и малую α, и высокую мощность при малом эффекте — <b>больше выборка</b>.</p>
+        <div class="call ok"><span class="ci">✅</span><div>Проверьте себя: в A/A-тесте (эффекта нет) доля «значимых» результатов должна быть ≈ α. Значимость рождается из чистого шума — это нормально и это причина не подглядывать.</div></div>
+        <a class="demo-link" href="#demo">▶ Демо: «Проверка гипотез» (α, β, мощность, A/A)</a>
+      </div>
+    </details>
+  </section>
+
+  <!-- ================= БЛОК 2 ================= -->
+  <section class="block" data-block="b2">
+    <div class="block-h"><span class="n">Блок 2</span><h2>Основы A/B тестирования</h2></div>
+    <p class="block-sub">Превращаем статистику в инструмент продуктовых решений.</p>
+
+    <details class="panel" data-kw="причинность корреляция rct эксперимент confounder рандомизация rubin">
+      <summary><span class="tag">2.1</span><span class="ttl">Причинность и рандомизированный эксперимент</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Аналитика показывает <b>корреляции</b>, а решения требуют <b>причинности</b>. «Выкатили фичу — метрика выросла» ≠ фича помогла: мог смениться сезон, маркетинг, аудитория (confounders).</p>
+        <h4>Почему RCT — золотой стандарт</h4>
+        <p>Случайное распределение пользователей по группам A и B делает их статистически одинаковыми во всём, кроме тестируемого изменения. Поэтому разницу в метрике можно приписать именно изменению — «при прочих равных» обеспечивается рандомизацией.</p>
+        <div class="call note"><span class="ci">💡</span><div>Модель потенциальных исходов (Рубина): у каждого юзера есть исход «с фичей» и «без», но мы видим только один. Рандомизация позволяет корректно оценить <i>средний</i> эффект по группе.</div></div>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="метрики oec primary secondary guardrail суррогатные ratio ctr">
+      <summary><span class="tag">2.2</span><span class="ttl">Метрики и OEC</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Выбор метрик — половина успеха. До запуска фиксируем:</p>
+        <ul>
+          <li><b>Primary</b> — одна целевая метрика, ради которой тест.</li>
+          <li><b>Secondary</b> — помогают объяснить эффект.</li>
+          <li><b>Guardrail (ограждающие)</b> — не должны просесть: latency, retention, отписки, краши.</li>
+          <li><b>OEC</b> — общий критерий оценки, связанный с долгосрочной ценностью.</li>
+        </ul>
+        <h4>Свойства хорошей метрики</h4>
+        <p>Чувствительность (реагирует на изменения), измеримость, связь с реальной ценностью для бизнеса и пользователя.</p>
+        <div class="call warn"><span class="ci">⚠️</span><div><b>Ловушка суррогатов:</b> клики ≠ удовлетворённость. Оптимизируя кликбейт, легко нарастить CTR и уронить retention. Guardrail-метрики для того и нужны.</div></div>
+        <div class="call note"><span class="ci">💡</span><div>Ratio-метрики (CTR = клики/показы) имеют «хитрую» дисперсию, если единица анализа ≠ единица рандомизации. Считать её нужно дельта-методом (см. 4.1).</div></div>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="рандомизация единица хеш соль ramp holdout сессия пользователь">
+      <summary><span class="tag">2.3</span><span class="ttl">Дизайн и рандомизация</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Правильно раздать пользователей по группам — половина корректности.</p>
+        <h4>Единица рандомизации</h4>
+        <p>Обычно — <b>пользователь</b> (по стабильному ID). Рандомизация по сессии искажает метрики уровня пользователя, потому что один человек попадает в обе группы.</p>
+        <h4>Как назначают группу</h4>
+        <p>Хеш от <code>ID + соль эксперимента</code> → равномерное и <i>стабильное</i> распределение (юзер не прыгает между группами при повторных заходах).</p>
+        <h4>Раскатка</h4>
+        <p>Ramp-up: 1% → 5% → 50%, чтобы поймать критичные баги на малом трафике. Holdout — часть аудитории держат на контроле для оценки долгосрочного эффекта.</p>
+        <div class="call warn"><span class="ci">⚠️</span><div><b>Правило:</b> единица рандомизации и единица анализа должны совпадать, иначе ломается независимость наблюдений и дисперсия занижается.</div></div>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="размер выборки mde мощность длительность sample size расчёт">
+      <summary><span class="tag">2.4</span><span class="ttl">Размер выборки, MDE и мощность</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Считать объём данных нужно <b>до</b> запуска. Пропуск = слитый эксперимент (либо не хватит мощности, либо тест бесконечный).</p>
+        <h4>Входные параметры</h4>
+        <ul>
+          <li><b>MDE</b> — минимальный эффект, который хотим уверенно ловить.</li>
+          <li>Базовая конверсия / дисперсия метрики.</li>
+          <li><b>α</b> (обычно 5%) и <b>мощность</b> (обычно 80%).</li>
+        </ul>
+        <div class="formula">n ∝ <span class="frac"><span>σ²</span><span>MDE²</span></span></div>
+        <p>Ключевое: <b>квадратичная</b> зависимость. Уменьшили MDE вдвое — выборка выросла вчетверо.</p>
+        <h4>Длительность</h4>
+        <p><code>дни = 2·n / трафик_в_день</code>, но не короче 1–2 <b>полных недель</b> — иначе day-of-week эффект исказит результат.</p>
+        <div class="call ok"><span class="ci">✅</span><div>Два способа ускорить тест: ловить только крупные эффекты (больше MDE) или снизить дисперсию σ² (CUPED, стратификация).</div></div>
+        <a class="demo-link" href="#demo">▶ Демо: «Калькулятор размера выборки»</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="критерии t-тест z-тест хи-квадрат welch mann whitney бутстрап">
+      <summary><span class="tag">2.5</span><span class="ttl">Статистические критерии</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Критерий выбирают под тип метрики.</p>
+        <ul>
+          <li><b>Конверсия / доля</b> → z-тест для двух долей или χ².</li>
+          <li><b>Среднее</b> (выручка, время) → t-тест <b>Уэлча</b> (по умолчанию, не требует равных дисперсий).</li>
+          <li><b>Дикое распределение + малое n</b> → Mann–Whitney U или bootstrap.</li>
+        </ul>
+        <p>z-тест для двух долей опирается на объединённую оценку:</p>
+        <div class="formula">z = <span class="frac"><span>p̂_B − p̂_A</span><span>√( p̂(1−p̂)(1/n_A + 1/n_B) )</span></span></div>
+        <div class="call note"><span class="ci">💡</span><div>По умолчанию — <b>двусторонний</b> тест: мы допускаем, что вариант может оказаться и хуже. Односторонний берут осознанно и редко.</div></div>
+        <a class="demo-link" href="#demo">▶ Демо: «Статкритерии»</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="интерпретация результат lift эффект доверительный интервал практическая значимость readout">
+      <summary><span class="tag">2.6</span><span class="ttl">Анализ и интерпретация результатов</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Хороший вывод — это не «p&lt;0.05», а <b>эффект + доверительный интервал + решение</b>.</p>
+        <ul>
+          <li>Оцените эффект: абсолютный и относительный прирост.</li>
+          <li>Постройте CI для эффекта — он важнее p-value: показывает и величину, и неопределённость.</li>
+          <li>Разделяйте <b>статистическую</b> и <b>практическую</b> значимость: значимо, но +0.01% — не внедряем.</li>
+        </ul>
+        <div class="call warn"><span class="ci">⚠️</span><div><b>«Нет значимости» ≠ «эффекта нет».</b> Возможно, не хватило мощности. Честный вывод: «эффект, если и есть, меньше MDE».</div></div>
+        <h4>Readout</h4>
+        <p>Короткий отчёт: эффект, CI, состояние guardrail-метрик, оговорки и рекомендация — раскатывать / откатывать / доитерировать.</p>
+        <a class="demo-link" href="#demo">▶ Демо: «Статкритерии» строит CI для эффекта</a>
+      </div>
+    </details>
+  </section>
+
+  <!-- ================= БЛОК 3 ================= -->
+  <section class="block" data-block="b3">
+    <div class="block-h"><span class="n">Блок 3</span><h2>Подводные камни и корректность</h2></div>
+    <p class="block-sub">Здесь живёт разница между «смотрю на p-value» и «мне доверяют решения».</p>
+
+    <details class="panel" data-kw="peeking подглядывание ранняя остановка фиксированный горизонт">
+      <summary><span class="tag">3.1</span><span class="ttl">Проблема подглядывания (peeking)</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Если останавливать тест «как только стало значимо», реальная ошибка I рода взлетает с 5% до 20–30%+.</p>
+        <p>Причина: p-value гуляет во времени. При множестве проверок оно рано или поздно случайно пересечёт порог — даже когда эффекта нет.</p>
+        <div class="call warn"><span class="ci">⚠️</span><div>Дашборд с «live significance» без поправок — ловушка. Каждый взгляд на него = ещё один шанс на ложную «победу».</div></div>
+        <div class="call ok"><span class="ci">✅</span><div><b>Как правильно:</b> зафиксировать размер выборки и дату остановки заранее и смотреть один раз. Либо применять sequential-методы (4.2), честно контролирующие α.</div></div>
+        <a class="demo-link" href="#demo">▶ Демо: «Проблема peeking»</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="множественные сравнения bonferroni holm benjamini hochberg fdr fwer">
+      <summary><span class="tag">3.2</span><span class="ttl">Множественные сравнения</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Тестируете 20 метрик или сегментов при α=5%? В среднем одна покажет «значимость» случайно, даже если ничего не работает.</p>
+        <h4>Поправки</h4>
+        <ul>
+          <li><b>Bonferroni / Holm</b> — контроль FWER (вероятности хотя бы одной ошибки). Строго, но консервативно.</li>
+          <li><b>Benjamini–Hochberg</b> — контроль FDR (доли ложных среди находок). Мягче и мощнее при многих метриках.</li>
+        </ul>
+        <div class="call ok"><span class="ci">✅</span><div>Главная защита — заранее объявленная <b>primary-метрика</b>. Всё остальное (сегменты, вторичные метрики) — с поправками и как генерация гипотез, а не финальные выводы.</div></div>
+        <a class="demo-link" href="#demo">▶ Демо: «Множественные сравнения»</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="srm sample ratio mismatch санити чек aa тест хи квадрат сплиттер">
+      <summary><span class="tag">3.3</span><span class="ttl">SRM, A/A и санити-чеки</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p><b>SRM (Sample Ratio Mismatch):</b> ждали 50/50, а пришло 52/48. Значит сломан сплиттер, логирование или фильтрация — и результатам верить нельзя.</p>
+        <p>Проверка — критерий χ² на соответствие ожидаемым долям, обычно со строгим порогом (p &lt; 0.001).</p>
+        <div class="call warn"><span class="ci">⚠️</span><div>При SRM <b>не «чините анализ»</b> — ищите баг в назначении групп: разная фильтрация ботов, редиректы варианта B, потери событий в джойнах.</div></div>
+        <h4>A/A-тесты</h4>
+        <p>Обе группы одинаковы. Проверяют инфраструктуру и калибровку: доля значимых должна быть ≈ α. Плюс сравнение групп по «до-экспериментальным» признакам.</p>
+        <a class="demo-link" href="#demo">▶ Демо: «SRM-чек»</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="novelty primacy сезонность day of week временные эффекты holdout">
+      <summary><span class="tag">3.4</span><span class="ttl">Временные эффекты (novelty / primacy)</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <ul>
+          <li><b>Novelty-эффект:</b> всплеск из-за новизны, который затухает через дни/недели.</li>
+          <li><b>Primacy-эффект:</b> временное падение, пока пользователи привыкают.</li>
+          <li><b>Сезонность и day-of-week:</b> поведение по будням и выходным разное → тест должен покрывать целые недели.</li>
+        </ul>
+        <div class="call warn"><span class="ci">⚠️</span><div>«Победа первого дня» часто тает к концу недели. Смотрите динамику эффекта по дням, а не только итог.</div></div>
+        <p>Долгосрочные эффекты ловят через holdout: часть аудитории держат на контроле неделями.</p>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="симпсон парадокс сегментный анализ агрегация confirmatory discovery">
+      <summary><span class="tag">3.5</span><span class="ttl">Парадокс Симпсона и сегменты</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p><b>Парадокс Симпсона:</b> эффект в целом и в каждом сегменте может иметь <i>разный знак</i> — из-за разного веса сегментов (например, неравномерного распределения трафика по группам внутри сегмента, что часто и есть симптом SRM).</p>
+        <p>Различайте два режима сегментации:</p>
+        <ul>
+          <li><b>Confirmatory</b> — заранее заявленные сегменты (гипотеза была до данных).</li>
+          <li><b>Discovery</b> — «давайте порежем по всему» → генерация гипотез, требует поправок на множественность (3.2).</li>
+        </ul>
+        <div class="call warn"><span class="ci">⚠️</span><div>«Копание» по сегментам без поправок почти гарантированно найдёт ложный «выигрышный сегмент». Это самообман, а не инсайт.</div></div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ================= БЛОК 4 ================= -->
+  <section class="block" data-block="b4">
+    <div class="block-h"><span class="n">Блок 4</span><h2>Продвинутые методы</h2></div>
+    <p class="block-sub">То, что отличает senior-уровень. Берите модули по мере надобности.</p>
+
+    <details class="panel" data-kw="cuped снижение дисперсии variance reduction стратификация дельта метод ковариата">
+      <summary><span class="tag">4.1</span><span class="ttl">Снижение дисперсии (CUPED)</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Меньше дисперсия → нужен меньший объём выборки при той же чувствительности. Тест становится быстрее без потери корректности.</p>
+        <h4>CUPED</h4>
+        <p>Используем <b>предэкспериментальную</b> ковариату X (например, активность юзера на прошлой неделе), коррелирующую с метрикой Y. Вычитаем предсказуемую часть:</p>
+        <div class="formula">Y_cuped = Y − θ·(X − X̄),&nbsp;&nbsp;θ = <span class="frac"><span>Cov(Y, X)</span><span>Var(X)</span></span></div>
+        <p>Среднее не смещается, а дисперсия падает в <code>(1 − ρ²)</code> раз, где ρ — корреляция Y и X. При ρ=0.7 это ~50% экономии трафика.</p>
+        <div class="call warn"><span class="ci">⚠️</span><div>Ковариата обязана быть измерена <b>до</b> эксперимента — иначе можно внести смещение.</div></div>
+        <h4>Дельта-метод</h4>
+        <p>Корректная дисперсия ratio-метрик (CTR, ARPPU), когда единица анализа ≠ единица рандомизации.</p>
+        <a class="demo-link" href="#demo">▶ Демо: «CUPED»</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="sequential последовательное тестирование msprt alpha spending always valid confidence sequence obrien fleming">
+      <summary><span class="tag">4.2</span><span class="ttl">Последовательное тестирование</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Позволяет <b>легально</b> подглядывать и останавливать тест раньше, сохраняя контроль α.</p>
+        <ul>
+          <li><b>Alpha-spending</b> (границы O'Brien–Fleming, Pocock) — «расходуем» α по мере проверок.</li>
+          <li><b>mSPRT</b> и <b>доверительные последовательности</b> — always-valid вывод: интервал корректен в любой момент.</li>
+        </ul>
+        <div class="call note"><span class="ci">💡</span><div>Отличие от наивного peeking: границы остановки заранее рассчитаны так, чтобы суммарная ошибка I рода не превысила α, сколько бы раз вы ни смотрели.</div></div>
+        <p>Trade-off: раннее решение в среднем — ценой чуть большей нужной выборки в худшем случае.</p>
+        <a class="demo-link" href="#demo">▶ Демо: «Проблема peeking» показывает, что чинит sequential</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="байесовский bayes beta binomial апостериор p(b>a) expected loss априор">
+      <summary><span class="tag">4.3</span><span class="ttl">Байесовский A/B тест</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Даёт прямые вероятностные утверждения о вариантах вместо p-value.</p>
+        <div class="formula">апостериор ∝ правдоподобие × априор</div>
+        <p>Для конверсий удобна пара Beta–Binomial: априор <code>Beta(1,1)</code> обновляется в <code>Beta(1+успехи, 1+неудачи)</code>. Из апостериоров считаем критерии решения:</p>
+        <ul>
+          <li><b>P(B &gt; A)</b> — вероятность, что B действительно лучше.</li>
+          <li><b>Expected loss</b> — сколько в среднем потеряем, если ошибочно выберем вариант.</li>
+        </ul>
+        <div class="call warn"><span class="ci">⚠️</span><div>Байес не «отменяет» дисциплину: результат чувствителен к априору, а раннюю остановку по P(B&gt;A) тоже нужно калибровать.</div></div>
+        <a class="demo-link" href="#demo">▶ Демо: «Байес и бандиты»</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="бандиты multi armed bandit thompson sampling ucb epsilon greedy regret exploration">
+      <summary><span class="tag">4.4</span><span class="ttl">Многорукие бандиты</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Адаптивно льют больше трафика на лучший вариант, минимизируя «стоимость обучения» (regret).</p>
+        <ul>
+          <li><b>ε-greedy</b> — чаще жмём лучший, иногда исследуем случайный.</li>
+          <li><b>UCB</b> — оптимизм при неопределённости.</li>
+          <li><b>Thompson Sampling</b> — семплируем из апостериоров и выбираем максимум. Простой и сильный.</li>
+        </ul>
+        <p>Дилемма exploration/exploitation: исследовать (узнать правду) vs эксплуатировать (заработать сейчас).</p>
+        <div class="call warn"><span class="ci">⚠️</span><div>Бандит ≠ универсальная замена A/B. Он про оптимизацию (много вариантов, короткая жизнь контента). Для честной оценки эффекта, guardrail-контроля и обучения на будущее — классический A/B.</div></div>
+        <a class="demo-link" href="#demo">▶ Демо: «Байес и бандиты» (Thompson, regret)</a>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="интерференция sutva сетевые эффекты кластерная рандомизация switchback маркетплейс">
+      <summary><span class="tag">4.5</span><span class="ttl">Интерференция и switchback</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Когда пользователи влияют друг на друга, нарушается допущение <b>SUTVA</b> (исход юзера не зависит от группы других). Обычная рандомизация даёт смещённый эффект.</p>
+        <ul>
+          <li><b>Соцсети:</b> эффект «утекает» между группами через связи.</li>
+          <li><b>Маркетплейсы (two-sided):</b> вариант B забирает предложение/спрос у контроля.</li>
+        </ul>
+        <h4>Решения</h4>
+        <ul>
+          <li><b>Кластерная рандомизация</b> — по городам, регионам, группам друзей.</li>
+          <li><b>Switchback</b> — переключаем вариант по времени для всей системы (классика логистики и маркетплейсов).</li>
+        </ul>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="гетерогенность hte cate uplift моделирование meta learner causal forest econml">
+      <summary><span class="tag">4.6</span><span class="ttl">Гетерогенность эффектов и uplift</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Эффект редко одинаков для всех. <b>CATE / HTE</b> — эффект как функция признаков пользователя.</p>
+        <ul>
+          <li><b>Meta-learners</b> (S/T/X-learner), <b>causal forest</b> — оценивают индивидуальный эффект.</li>
+          <li><b>Uplift-моделирование</b> — таргетируем «убеждаемых», а не всех подряд: воздействуем там, где это реально меняет поведение.</li>
+        </ul>
+        <div class="call warn"><span class="ci">⚠️</span><div>Риск переобучения и ложной сегментации (связь с 3.5). Индивидуальные эффекты нужно валидировать, а не верить им на слово.</div></div>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="квазиэксперимент did diff in diff synthetic control regression discontinuity causalimpact параллельные тренды">
+      <summary><span class="tag">4.7</span><span class="ttl">Квазиэксперименты</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Когда рандомизировать нельзя (раскатка на весь рынок, регуляторика, оффлайн-каналы), причинность оценивают квазиметодами.</p>
+        <ul>
+          <li><b>Difference-in-Differences (DiD)</b> — сравнение динамики «до/после» у теста и контроля. Допущение — параллельные тренды.</li>
+          <li><b>Synthetic control</b> — синтетический контроль из взвешенных «доноров».</li>
+          <li><b>Regression Discontinuity, IV, CausalImpact</b> — под разные ситуации.</li>
+        </ul>
+        <div class="call warn"><span class="ci">⚠️</span><div>Все они держатся на допущениях, которые легко провисают. Проверяйте параллельность трендов до вмешательства и делайте плацебо-тесты.</div></div>
+      </div>
+    </details>
+
+    <details class="panel" data-kw="платформа культура экспериментов trustworthiness скоркард этика мета анализ">
+      <summary><span class="tag">4.8</span><span class="ttl">Платформа и культура экспериментов</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <p>Отдельный тест — ремесло; система экспериментов — конкурентное преимущество.</p>
+        <ul>
+          <li><b>Платформа:</b> назначение групп, фреймворк метрик, автоматические SRM/санити-чеки, скоркарды.</li>
+          <li><b>Институциональная память:</b> реестр экспериментов и мета-анализ прошлых тестов.</li>
+          <li><b>Trustworthiness:</b> воспроизводимость, ревью дизайна, борьба с p-hacking через процесс.</li>
+          <li><b>Этика:</b> вред, справедливость, информированность пользователей.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <div class="empty" id="empty">Ничего не найдено. Попробуйте другой запрос.</div>
+
+  <section id="demo" class="block">
+    <div class="block-h"><span class="n">🎛️</span><h2>Интерактивные демо</h2></div>
+    <p class="block-sub">К каждой теме есть демо в Streamlit — двигаете слайдеры, видите статистику вживую.</p>
+    <details class="panel">
+      <summary><span class="tag">▶</span><span class="ttl">Как запустить демо</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></summary>
+      <div class="panel-body">
+        <div class="formula">git clone https://github.com/geekhugged/edu-ab.git
+cd edu-ab/app
+pip install -r requirements.txt
+streamlit run streamlit_app.py</div>
+        <p>Или задеплойте бесплатно на <a href="https://share.streamlit.io" target="_blank" rel="noopener">Streamlit Community Cloud</a>: репозиторий <code>geekhugged/edu-ab</code>, ветка <code>main</code>, файл <code>app/streamlit_app.py</code>.</p>
+      </div>
+    </details>
+  </section>
+</div>
+
+<button class="fab" id="fab" aria-label="Наверх">
+  <svg viewBox="0 0 24 24"><path d="M7.4 15.4 12 10.8l4.6 4.6L18 14l-6-6-6 6z"/></svg>
+</button>
+
+<footer>
+  edu-ab — открытая программа по A/B тестированию<br/>
+  <a href="https://github.com/geekhugged/edu-ab" target="_blank" rel="noopener">GitHub</a> · Учись, экспериментируй, не подглядывай в тесты 😉
 </footer>
 
 <script>
-  (function(){
-    var btn=document.getElementById('themeToggle');
-    var root=document.documentElement;
-    btn.addEventListener('click',function(){
-      var cur=root.getAttribute('data-theme');
-      var next = cur==='dark' ? 'light' : (cur==='light' ? 'dark' :
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'light':'dark'));
-      root.setAttribute('data-theme',next);
+  // Поиск
+  var q = document.getElementById('q');
+  var panels = Array.prototype.slice.call(document.querySelectorAll('details.panel[data-kw]'));
+  var blocks = Array.prototype.slice.call(document.querySelectorAll('section.block[data-block]'));
+  var empty = document.getElementById('empty');
+  var activeFilter = 'all';
+
+  function norm(s){return (s||'').toLowerCase();}
+
+  function apply(){
+    var term = norm(q.value).trim();
+    var anyVisible = false;
+    panels.forEach(function(p){
+      var text = norm(p.querySelector('.ttl').textContent + ' ' + (p.dataset.kw||''));
+      var inBlock = activeFilter === 'all' || p.closest('section.block').dataset.block === activeFilter;
+      var match = term === '' || text.indexOf(term) !== -1;
+      var show = inBlock && match;
+      p.style.display = show ? '' : 'none';
+      if(show){ anyVisible = true; if(term){ p.open = true; } }
     });
-  })();
+    // прячем блоки без видимых панелей
+    blocks.forEach(function(b){
+      var has = Array.prototype.some.call(b.querySelectorAll('details.panel'), function(p){return p.style.display !== 'none';});
+      var inF = activeFilter === 'all' || b.dataset.block === activeFilter;
+      b.style.display = (has && inF) ? '' : 'none';
+    });
+    empty.style.display = anyVisible ? 'none' : 'block';
+  }
+  q.addEventListener('input', apply);
+
+  // Чипы-фильтры
+  document.getElementById('chips').addEventListener('click', function(e){
+    var chip = e.target.closest('.chip'); if(!chip) return;
+    document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('active');});
+    chip.classList.add('active');
+    activeFilter = chip.dataset.f;
+    apply();
+    if(activeFilter !== 'all'){
+      var sec = document.querySelector('section.block[data-block="'+activeFilter+'"]');
+      if(sec) window.scrollTo({top: sec.offsetTop - 70, behavior:'smooth'});
+    } else { window.scrollTo({top:0, behavior:'smooth'}); }
+  });
+
+  // Развернуть/свернуть всё
+  var allOpen = false;
+  document.getElementById('toggleAll').addEventListener('click', function(){
+    allOpen = !allOpen;
+    document.querySelectorAll('details.panel').forEach(function(d){
+      if(d.style.display !== 'none') d.open = allOpen;
+    });
+  });
+
+  // FAB наверх
+  var fab = document.getElementById('fab');
+  window.addEventListener('scroll', function(){
+    fab.classList.toggle('show', window.scrollY > 500);
+  }, {passive:true});
+  fab.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
 </script>
 </body>
 </html>
